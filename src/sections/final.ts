@@ -22,7 +22,7 @@ export function final(): string {
         <a href="${SITE.phoneHref}">${SITE.phoneDisplay}</a>
         <a href="${SITE.social.vk}" target="_blank" rel="noopener">ВКонтакте</a>
         <a href="${SITE.social.telegram}" target="_blank" rel="noopener">Telegram</a>
-        <a href="${SITE.social.max}" target="_blank" rel="noopener">МАКС</a>
+        <a href="${SITE.social.max}" target="_blank" rel="noopener">MAX</a>
       </div>
       <div class="final__photos" data-reveal>${photos}</div>
     </div>

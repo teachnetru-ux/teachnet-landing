@@ -31,7 +31,8 @@ const ITEMS: AccItem[] = [
 
 export function faq(): string {
   return `<section class="section" id="faq" aria-labelledby="faq-h">
-    <div class="container" style="max-width:880px">
+    <div class="blobs"></div>
+    <div class="container layer" style="max-width:880px">
       <div class="section-head" data-reveal>
         <h2 class="h2" id="faq-h">Частые вопросы родителей</h2>
       </div>

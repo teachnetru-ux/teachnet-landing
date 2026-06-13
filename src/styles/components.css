@@ -85,8 +85,8 @@
 }
 .card-hover { transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; }
 .card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 36px rgba(45, 99, 151, 0.14);
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(45, 99, 151, 0.16);
 }
 .card-hover:hover.card--program { border-color: var(--brand); }
 .card-icon {
@@ -275,11 +275,7 @@
   width: 100%;
   padding: 16px 14px;
   min-height: 84px;
-  filter: grayscale(1);
-  opacity: 0.7;
-  transition: filter 0.2s ease, opacity 0.2s ease;
 }
-.trust-item:hover .trust-logo { filter: grayscale(0); opacity: 1; }
 .trust-cap {
   font-size: 13px;
   line-height: 1.35;
@@ -372,38 +368,66 @@
   min-width: 1.6em;
 }
 
-/* ---------- Печать/штамп (§6) ---------- */
+/* ---------- Печать/штамп (§6) — двойная тонкая обводка, лёгкий наклон ---------- */
 .stamp {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 116px;
-  height: 116px;
+  width: 112px;
+  height: 112px;
   border-radius: 50%;
-  border: 2px solid var(--rank);
+  border: 1.5px solid var(--rank);
   color: var(--rank);
-  transform: rotate(-8deg);
+  transform: rotate(-7deg);
   text-align: center;
   font-family: var(--font-head);
   font-weight: 700;
-  font-size: 12px;
-  letter-spacing: 0.06em;
+  font-size: 11.5px;
+  letter-spacing: 0.07em;
   line-height: 1.25;
   text-transform: uppercase;
-  padding: 10px;
-  background: color-mix(in srgb, var(--rank) 7%, #fff);
+  padding: 14px;
+  background: color-mix(in srgb, var(--rank) 8%, #fff);
+}
+/* вторая (внутренняя) тонкая обводка */
+.stamp::before {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--rank) 65%, transparent);
+}
+/* на мобиле печать уменьшаем и держим в углу, чтобы не налезала на текст карточки */
+@media (max-width: 679px) {
+  .stamp {
+    width: 78px;
+    height: 78px;
+    font-size: 9px;
+    letter-spacing: 0.05em;
+    padding: 9px;
+  }
+  .stamp::before { inset: 4px; }
 }
 
-/* ---------- FAQ-аккордеон (§7) ---------- */
-.acc-item { border-top: 1px solid var(--field-border); }
-.acc-item:last-child { border-bottom: 1px solid var(--field-border); }
+/* ---------- FAQ-аккордеон (§7) — стеклянные плашки на пятнах ---------- */
+.acc { display: flex; flex-direction: column; gap: 12px; }
+.acc-item {
+  padding-inline: 22px;
+  border-radius: var(--r-card);
+  background: rgba(255, 255, 255, 0.6);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: var(--shadow);
+}
 .acc-trigger {
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  padding: 22px 4px;
+  padding: 20px 0;
   background: none;
   border: 0;
   cursor: pointer;
@@ -437,7 +461,7 @@
   transition: height 0.2s ease;
 }
 .acc-panel__inner {
-  padding: 0 4px 24px;
+  padding: 0 0 22px;
   color: var(--text-soft);
   max-width: 64ch;
 }
@@ -628,16 +652,34 @@
 }
 .footer-social a:hover { background: rgba(255, 255, 255, 0.12); color: var(--brand-soft); }
 .footer-social .icon { width: 20px; height: 20px; }
+/* блок поддержки ФСИ (§11) */
+.footer-support {
+  margin-top: 44px;
+  padding-top: 28px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.footer-support__logo { height: 54px; width: auto; flex: none; opacity: 0.9; }
+.footer-support__text {
+  font-size: 12px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.5);
+  max-width: 88ch;
+}
+/* нижняя строка: логотип IT-парка и ссылки — всё по левому краю, в одну линию с контентом */
 .footer-bottom {
-  margin-top: 48px;
+  margin-top: 28px;
   padding-top: 24px;
   border-top: 1px solid rgba(255, 255, 255, 0.12);
   display: flex;
-  flex-wrap: wrap;
-  gap: 14px 24px;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18px;
 }
+.footer-itpark { height: 42px; width: auto; opacity: 0.7; }
 .footer-bottom__links {
   display: flex;
   flex-wrap: wrap;
@@ -646,6 +688,10 @@
   color: rgba(255, 255, 255, 0.6);
 }
 .footer-bottom__links a { color: rgba(255, 255, 255, 0.6); }
+/* на мобиле юр-ссылки компактно в столбец, чтобы не расползались */
+@media (max-width: 559px) {
+  .footer-bottom__links { flex-direction: column; gap: 8px; font-size: 12px; }
+}
 
 /* ---------- Плейсхолдеры фото (серый прямоугольник «ФОТО: …») ---------- */
 .ph {
@@ -672,22 +718,59 @@
 .section-head .h2 { margin-bottom: 16px; }
 @media (min-width: 768px) { .section-head { margin-bottom: 56px; } }
 
-/* ---------- Hero (§1, §5, §6) ---------- */
+/* ---------- Hero (§1, §5, §6) — фото на всю ширину, контент поверх ---------- */
 .hero {
-  padding-top: calc(var(--header-h) + 40px);
-  padding-bottom: 56px;
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  min-height: clamp(560px, 92svh, 860px);
+  padding-top: calc(var(--header-h) + 48px);
+  padding-bottom: 64px;
   text-align: center;
   overflow: hidden;
 }
-@media (min-width: 768px) {
-  .hero { padding-top: calc(var(--header-h) + 64px); padding-bottom: 96px; }
+.hero__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
 }
-.hero__inner { display: flex; flex-direction: column; align-items: center; gap: 30px; }
-.hero__copy { max-width: 880px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
-.hero__sub { max-width: 680px; }
+/* тёмный градиентный оверлей поверх фото (снизу плотнее) */
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(14, 26, 40, 0.30) 0%, rgba(14, 26, 40, 0.42) 50%, rgba(14, 26, 40, 0.55) 100%);
+}
+.hero .layer { position: relative; z-index: 2; }
+.hero__copy {
+  max-width: 860px;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  text-shadow: 0 1px 20px rgba(14, 26, 40, 0.35);
+}
+.hero .h1 { color: #fff; }
+.hero__sub { max-width: 680px; color: rgba(255, 255, 255, 0.9); }
 .hero__cta { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 4px; }
-.hero__media { width: 100%; max-width: 1000px; }
-.hero__photo { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; box-shadow: var(--shadow); }
+.hero .micro { color: rgba(255, 255, 255, 0.7); }
+/* стеклянный бейдж читается поверх фото */
+.hero .chip--glass {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #fff;
+}
+@media (min-width: 768px) {
+  .hero { padding-top: calc(var(--header-h) + 72px); padding-bottom: 96px; }
+}
 
 /* ---------- Список-галочки (блоки 9, 10) ---------- */
 .ticks { display: flex; flex-direction: column; gap: 14px; }
@@ -711,20 +794,32 @@
 @media (min-width: 760px) { .mission-list { grid-template-columns: repeat(2, 1fr); gap: 36px 48px; } }
 .mission-step__title { margin-bottom: 8px; }
 
-/* ---------- Мотивация (блок 6) — главный glass-экран на пятнах ---------- */
-.motivation { position: relative; overflow: hidden; }
-.motivation .card-glass {
+/* ---------- Стеклянная карточка (§5) — сквозной приём ----------
+   Работает только на секциях с градиентными пятнами (.blobs), иначе нечему
+   просвечивать. Поэтому используется на: мотивация, родители, цена. */
+.card-glass {
   position: relative;
-  padding: 26px;
+  padding: 28px;
   border-radius: var(--r-card);
-  background: var(--glass-bg);
+  background: rgba(255, 255, 255, 0.6);
   -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--glass-border);
+  border: 1px solid rgba(255, 255, 255, 0.7);
   box-shadow: var(--shadow);
 }
+/* запасной вариант там, где нет backdrop-filter — делаем фон плотнее ради читаемости */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .card-glass,
+  .acc-item { background: rgba(255, 255, 255, 0.92); }
+}
+
+/* ---------- Мотивация (блок 6) — главный glass-экран на пятнах ---------- */
+.motivation { position: relative; overflow: hidden; }
 .passport-card { position: relative; }
 .passport-card .stamp { position: absolute; top: 18px; right: 18px; }
+@media (max-width: 679px) {
+  .passport-card .stamp { top: 12px; right: 12px; }
+}
 
 /* ---------- Конверсионный блок (блок 9) ---------- */
 .conversion { position: relative; overflow: hidden; }
@@ -752,13 +847,20 @@
 .team-grid { display: grid; gap: 18px; }
 @media (min-width: 600px) { .team-grid { grid-template-columns: repeat(3, 1fr); } }
 .team-photo { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 18px; }
-.team-cap { margin-top: 12px; font-weight: 500; }
 
 /* ---------- Финал (блок 12) ---------- */
 .final { text-align: center; }
 .final__photos { display: grid; gap: 14px; margin-top: 40px; grid-template-columns: repeat(2, 1fr); }
 @media (min-width: 760px) { .final__photos { grid-template-columns: repeat(3, 1fr); } }
 .final__photos img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 18px; }
+/* на мобиле (2 колонки) одиночное третье фото — по центру, а не слева */
+@media (max-width: 759px) {
+  .final__photos img:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: calc(50% - 7px);
+  }
+}
 .final__contacts { display: flex; flex-wrap: wrap; gap: 10px 22px; justify-content: center; margin-top: 24px; color: var(--text-soft); }
 .final__contacts a { color: var(--text); }
 

@@ -31,7 +31,7 @@ export function leadForm(): string {
       <input class="hp-field" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
       <button type="submit" class="btn btn--block">Записаться бесплатно</button>
     </div>
-    <p class="form-foot micro">Перезвоним в течение <!-- TODO: блок 9 — срок перезвона («15 минут» / «часа») -->. Только чтобы согласовать время.</p>
+    <p class="form-foot micro">Перезвоним в течение 15 минут в рабочее время. Только чтобы согласовать время.</p>
     <div class="form-success" role="status" aria-live="polite">
       <span class="form-success__check">${icon('check')}</span>
       <h3 class="h3">Спасибо, перезвоним</h3>

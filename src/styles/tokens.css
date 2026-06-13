@@ -33,11 +33,11 @@
   --font-head: 'Onest', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-text: 'Golos Text', system-ui, -apple-system, 'Segoe UI', sans-serif;
 
-  /* --- Glass (§5) --- */
+  /* --- Glass (§5) — сквозной приём: полупрозрачный фон + blur 20px --- */
   --glass-bg: rgba(255, 255, 255, 0.55);
-  --glass-border: rgba(255, 255, 255, 0.65);
+  --glass-border: rgba(255, 255, 255, 0.6);
   --glass-blur: 20px;
-  --glass-bg-header: rgba(255, 255, 255, 0.7); /* §8: шапка при скролле rgba 0.7 */
+  --glass-bg-header: rgba(255, 255, 255, 0.6); /* §8: шапка при скролле — белый фон 60% */
 
   /* --- Сетка (§4) --- */
   --container: 1200px;

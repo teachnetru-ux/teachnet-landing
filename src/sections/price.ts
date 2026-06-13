@@ -13,8 +13,9 @@ export function price(): string {
     .join('');
 
   return `<section class="section" id="price" aria-labelledby="price-h">
-    <div class="container">
-      <article class="card price-card" data-reveal>
+    <div class="blobs blobs--center"></div>
+    <div class="container layer">
+      <article class="card-glass price-card" data-reveal>
         <h2 class="h2 price-amount" id="price-h">7 000 ₽ в месяц.<br>Всё включено.</h2>
         <ul class="ticks">${ticks}</ul>
         <p class="micro" style="margin-top:26px">Первый урок бесплатный. Решайте после него.</p>
