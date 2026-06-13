@@ -6,8 +6,6 @@ export function team(): string {
     .map(
       (i) => `<figure data-reveal>
         <img class="team-photo ph" src="/images/team-${i}.svg" width="800" height="1000" loading="lazy" decoding="async" alt="Преподаватель и дети на мастер-классе" />
-        <!-- TODO: §8 — имя и роль преподавателя одной строкой -->
-        <figcaption class="team-cap muted">Имя · роль</figcaption>
       </figure>`,
     )
     .join('');

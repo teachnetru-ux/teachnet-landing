@@ -244,6 +244,10 @@ html.mm-lock { overflow: hidden; }
   transform: translateX(-50%);
   background: radial-gradient(circle, var(--brand-soft) 0%, transparent 70%);
 }
+/* усиленные пятна — для главного glass-экрана (блок 6), чтобы стеклу было что просвечивать */
+.blobs--strong::before { width: 620px; height: 620px; opacity: 0.5; }
+.blobs--strong::after { width: 580px; height: 580px; opacity: 0.42; }
+.blobs--center.blobs--strong::after { transform: translateX(-50%); }
 
 /* поверх z-слоёв — контент */
 .layer { position: relative; z-index: 1; }

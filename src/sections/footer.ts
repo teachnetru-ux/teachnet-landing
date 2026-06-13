@@ -13,7 +13,7 @@ export function footer(): string {
           <div class="footer-social">
             <a href="${SITE.social.vk}" target="_blank" rel="noopener" aria-label="ВКонтакте">${icon('vk')}</a>
             <a href="${SITE.social.telegram}" target="_blank" rel="noopener" aria-label="Telegram">${icon('send')}</a>
-            <a href="${SITE.social.max}" target="_blank" rel="noopener" aria-label="МАКС">${icon('message-circle')}</a>
+            <a href="${SITE.social.max}" target="_blank" rel="noopener" aria-label="MAX">${icon('message-circle')}</a>
           </div>
           <p class="footer-req" style="margin-top:24px">
             ${SITE.requisites.name}<br>
@@ -32,14 +32,19 @@ export function footer(): string {
 
       </div>
 
+      <div class="footer-support">
+        <img class="footer-support__logo" src="/images/logo-fsi.svg" width="120" height="60" loading="lazy" decoding="async" alt="Фонд содействия инновациям" />
+        <p class="footer-support__text">Проект создан при поддержке Федерального государственного бюджетного учреждения «Фонд содействия развитию малых форм предприятий в научно-технической сфере» в рамках программы «Студенческий стартап» федерального проекта «Платформа университетского технологического предпринимательства».</p>
+      </div>
+
       <div class="footer-bottom">
+        <img class="footer-itpark" src="/images/logo-itpark.svg" width="90" height="50" loading="lazy" decoding="async" alt="IT-парк" />
         <div class="footer-bottom__links">
           <span>© ${SITE.brand} ${SITE.year}</span>
           <a href="${SITE.legal.privacy}" target="_blank" rel="noopener">Политика конфиденциальности</a>
           <a href="${SITE.legal.consent}" target="_blank" rel="noopener">Согласие на обработку персональных данных</a>
           <a href="${SITE.legal.cookie}" target="_blank" rel="noopener">Политика использования cookie</a>
         </div>
-        <img src="/images/logo-itpark.svg" width="90" height="50" loading="lazy" decoding="async" alt="IT-парк" style="opacity:.7" />
       </div>
     </div>
   </footer>`;

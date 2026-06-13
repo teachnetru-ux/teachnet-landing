@@ -3,7 +3,7 @@ import { icon } from '../lib/icons';
 
 export function motivation(): string {
   return `<section class="section motivation" aria-labelledby="mot-h">
-    <div class="blobs blobs--center"></div>
+    <div class="blobs blobs--center blobs--strong"></div>
     <div class="container layer">
       <div class="section-head" data-reveal>
         <h2 class="h2" id="mot-h">Почему дети сами просятся на занятия</h2>
@@ -25,7 +25,7 @@ export function motivation(): string {
 
         <article class="card-glass" data-reveal>
           <span class="card-icon card-icon--rank">${icon('coins')}</span>
-          <h3 class="h3" style="margin-bottom:10px">Монеты за успехи.</h3>
+          <h3 class="h3" style="margin-bottom:10px">ТИЧКОИНЫ — монеты за успехи.</h3>
           <p class="muted">Заработал — обменял на реальный приз.</p>
         </article>
 

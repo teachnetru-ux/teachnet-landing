@@ -22,7 +22,7 @@ const CARDS: { icon: IconName; title: string; text: string }[] = [
 
 export function parents(): string {
   const cards = CARDS.map(
-    (c) => `<article class="card card-hover" data-reveal>
+    (c) => `<article class="card-glass card-hover" data-reveal>
       <span class="card-icon">${icon(c.icon)}</span>
       <h3 class="h3" style="margin-bottom:10px">${c.title}</h3>
       <p class="muted">${c.text}</p>
@@ -30,7 +30,8 @@ export function parents(): string {
   ).join('');
 
   return `<section class="section" aria-labelledby="par-h">
-    <div class="container">
+    <div class="blobs"></div>
+    <div class="container layer">
       <div class="section-head" data-reveal>
         <h2 class="h2" id="par-h">Вы будете знать, чем занимается ваш ребёнок</h2>
         <p class="lead">Обычно на вопрос «что вы там делали?» дети отвечают «ну, роботов собирали». У нас — иначе.</p>
