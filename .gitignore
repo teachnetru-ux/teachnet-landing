@@ -1,0 +1,5 @@
+node_modules/
+dist/
+.tn-npm-cache/
+*.log
+.DS_Store
