@@ -718,58 +718,28 @@
 .section-head .h2 { margin-bottom: 16px; }
 @media (min-width: 768px) { .section-head { margin-bottom: 56px; } }
 
-/* ---------- Hero (§1, §5, §6) — фото на всю ширину, контент поверх ---------- */
+/* ---------- Hero (§1, §5, §6) — фото отдельной карточкой под текстом ---------- */
 .hero {
-  position: relative;
-  isolation: isolate;
-  display: flex;
-  align-items: center;
-  min-height: clamp(560px, 92svh, 860px);
-  padding-top: calc(var(--header-h) + 48px);
-  padding-bottom: 64px;
+  padding-top: calc(var(--header-h) + 40px);
+  padding-bottom: 56px;
   text-align: center;
   overflow: hidden;
 }
-.hero__bg {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-}
-/* тёмный градиентный оверлей поверх фото (снизу плотнее) */
-.hero::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  background: linear-gradient(180deg, rgba(14, 26, 40, 0.30) 0%, rgba(14, 26, 40, 0.42) 50%, rgba(14, 26, 40, 0.55) 100%);
-}
-.hero .layer { position: relative; z-index: 2; }
-.hero__copy {
-  max-width: 860px;
-  margin-inline: auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-  text-shadow: 0 1px 20px rgba(14, 26, 40, 0.35);
-}
-.hero .h1 { color: #fff; }
-.hero__sub { max-width: 680px; color: rgba(255, 255, 255, 0.9); }
-.hero__cta { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 4px; }
-.hero .micro { color: rgba(255, 255, 255, 0.7); }
-/* стеклянный бейдж читается поверх фото */
-.hero .chip--glass {
-  background: rgba(255, 255, 255, 0.16);
-  border-color: rgba(255, 255, 255, 0.35);
-  color: #fff;
-}
 @media (min-width: 768px) {
-  .hero { padding-top: calc(var(--header-h) + 72px); padding-bottom: 96px; }
+  .hero { padding-top: calc(var(--header-h) + 64px); padding-bottom: 96px; }
+}
+.hero__inner { display: flex; flex-direction: column; align-items: center; gap: 30px; }
+.hero__copy { max-width: 880px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
+.hero__sub { max-width: 680px; }
+.hero__cta { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 4px; }
+/* крупное фото во всю ширину контейнера — без больших пустых полей */
+.hero__media { width: 100%; }
+.hero__photo {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 16px;
+  box-shadow: var(--shadow);
 }
 
 /* ---------- Список-галочки (блоки 9, 10) ---------- */
