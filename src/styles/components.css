@@ -532,6 +532,9 @@
   opacity: 0;
 }
 
+/* текст под кнопкой не должен прилипать к ней */
+.form-foot { margin-top: 14px; }
+
 /* экран «Спасибо» */
 .form-success {
   display: none;

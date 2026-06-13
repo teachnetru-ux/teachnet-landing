@@ -1,7 +1,9 @@
 /**
- * Sticky CTA-бар (§9, §14). Появляется после 2-го экрана, снизу, glass.
+ * Sticky CTA-бар (§9, §14). Снизу, glass. Виден только в средней части страницы.
  * Слева текст (скрыт на мобильном), справа компактный CTA «Записаться».
- * Исчезает, когда видна форма блока 9 (#conversion) — чтобы не дублировать CTA.
+ * Скрыт на первых двух блоках (#hero, .trust), на форме (#conversion), на финальном
+ * CTA (#final) и в подвале (.site-footer) — через IntersectionObserver, чтобы не
+ * дублировать кнопку и не показывать бар слишком рано/поздно.
  */
 import { cta } from './button';
 
@@ -15,8 +17,10 @@ export function stickyBar(): string {
 export function initStickyBar(root: ParentNode = document): void {
   const bar = root.querySelector<HTMLElement>('#sticky-cta');
   if (!bar) return;
-  // бар виден со 2-го блока и до конца; скрыт на первом блоке (hero) и на финальном CTA (§12)
-  const hideSections = ['#hero', '#final']
+  // Бар виден только в средней части страницы. Скрыт там, где есть своя кнопка
+  // или показывать его рано/поздно: первые два блока (#hero и лента доверия .trust),
+  // блок формы (#conversion), финальный CTA (#final) и подвал (.site-footer).
+  const hideSections = ['#hero', '.trust', '#conversion', '#final', '.site-footer']
     .map((s) => document.querySelector(s))
     .filter((el): el is Element => el !== null);
 
