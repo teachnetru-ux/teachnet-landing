@@ -143,7 +143,16 @@
   font-size: 15px;
 }
 .site-header__right { display: flex; align-items: center; gap: 14px; }
-.site-header__cta { display: none; } /* CTA в шапке только на десктопе; на мобильном — в меню */
+/* CTA «Пробный урок» виден и в мобильной шапке (рядом с бургером), и продублирован в бургер-меню */
+.site-header__cta { display: inline-flex; }
+@media (max-width: 559px) {
+  .site-header__right { gap: 8px; }
+  .site-header__cta { height: 44px; padding-inline: 14px; font-size: 14px; }
+}
+@media (max-width: 360px) {
+  .site-header__logo { height: 30px; }
+  .site-header__cta { padding-inline: 12px; font-size: 13px; }
+}
 
 /* бургер (только мобильный) */
 .burger {
@@ -728,15 +737,16 @@
 @media (min-width: 768px) {
   .hero { padding-top: calc(var(--header-h) + 64px); padding-bottom: 96px; }
 }
-.hero__inner { display: flex; flex-direction: column; align-items: center; gap: 30px; }
+.hero__inner { display: flex; flex-direction: column; align-items: center; gap: 44px; }
 .hero__copy { max-width: 880px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
 .hero__sub { max-width: 680px; }
 .hero__cta { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 4px; }
-/* крупное фото во всю ширину контейнера — без больших пустых полей */
-.hero__media { width: 100%; }
+/* аккуратная фото-карточка по центру, ограничена по ширине и высоте */
+.hero__media { width: 100%; max-width: 900px; margin-inline: auto; }
 .hero__photo {
   width: 100%;
   aspect-ratio: 16 / 9;
+  max-height: 480px;
   object-fit: cover;
   border-radius: 16px;
   box-shadow: var(--shadow);
