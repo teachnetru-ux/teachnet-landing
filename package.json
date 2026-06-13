@@ -1,0 +1,26 @@
+{
+  "name": "teachnet-landing",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "TeachNet — лендинг школы инженерии и робототехники для детей в Казани",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 4173",
+    "assets": "node scripts/process-logo.mjs && node scripts/make-placeholders.mjs",
+    "assets:logo": "node scripts/process-logo.mjs",
+    "assets:placeholders": "node scripts/make-placeholders.mjs"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.0",
+    "@types/node": "^22.10.0",
+    "lucide-static": "^1.18.0",
+    "sharp": "^0.34.0",
+    "svg-path-bbox": "^2.1.0",
+    "svgo": "^4.0.0",
+    "tailwindcss": "^4.1.0",
+    "typescript": "^5.7.0",
+    "vite": "^6.3.0"
+  }
+}

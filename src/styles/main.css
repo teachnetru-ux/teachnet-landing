@@ -1,0 +1,27 @@
+/* TeachNet — точка входа стилей. Tailwind v4 + дизайн-токены + база + компоненты. */
+@import 'tailwindcss';
+@import './tokens.css';
+@import './base.css';
+@import './components.css';
+
+/* Маппинг дизайн-токенов в утилиты Tailwind (bg-brand, text-action, font-head …) */
+@theme inline {
+  --color-brand: var(--brand);
+  --color-action: var(--action);
+  --color-brand-soft: var(--brand-soft);
+  --color-rank: var(--rank);
+  --color-bg: var(--bg);
+  --color-bg-card: var(--bg-card);
+  --color-text: var(--text);
+  --color-text-soft: var(--text-soft);
+  --color-footer: var(--footer-bg);
+
+  --font-head: 'Onest', system-ui, sans-serif;
+  --font-text: 'Golos Text', system-ui, sans-serif;
+
+  --radius-card: var(--r-card);
+  --radius-btn: var(--r-btn);
+  --radius-chip: var(--r-chip);
+
+  --shadow-soft: var(--shadow);
+}
