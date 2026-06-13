@@ -54,6 +54,7 @@ const items = [
   { name: 'logo-fsi', w: 360, h: 200, lines: ['ЛОГО', 'ФСИ'] },
   { name: 'logo-itpark', w: 360, h: 200, lines: ['ЛОГО', 'IT-парк'] },
   { name: 'logo-youth-committee', w: 360, h: 200, lines: ['ЛОГО', 'Комитет по делам', 'детей и молодёжи'] },
+  { name: 'logo-tpp', w: 360, h: 200, lines: ['ЛОГО', 'Союз «ТПП РТ»'] },
 ];
 
 for (const it of items) {
