@@ -6,6 +6,7 @@ const PARTNERS = [
   { file: 'logo-fsi', name: 'Фонд содействия инновациям' },
   { file: 'logo-itpark', name: 'IT-парк' },
   { file: 'logo-youth-committee', name: 'Комитет по делам детей и молодёжи' },
+  { file: 'logo-tpp', name: 'Союз «ТПП РТ»' },
 ];
 
 export function trust(): string {
