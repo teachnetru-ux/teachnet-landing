@@ -136,6 +136,7 @@ $utm_term     = clean(post('utm_term'), 255);
 $utm_content  = clean(post('utm_content'), 255);
 $yclid        = clean(post('yclid'), 255);
 $ym_client_id = clean(post('ym_client_id'), 255);
+$referrer     = clean(post('referrer'), 512);
 
 // ── Валидация ────────────────────────────────────────────────────────────────
 if (mb_strlen($name) < 2 || strlen($digits) !== 11 || $ageInt < 3 || $ageInt > 18 || $consent === '') {
@@ -155,23 +156,20 @@ if ($BOT_TOKEN === '' || $CHAT_ID === '') {
     exit;
 }
 
-// ── Блок «Источник» (только непустые поля) ───────────────────────────────────
-$sourceFields = [
-    'utm_source'   => $utm_source,
-    'utm_medium'   => $utm_medium,
-    'utm_campaign' => $utm_campaign,
-    'utm_term'     => $utm_term,
-    'utm_content'  => $utm_content,
-    'yclid'        => $yclid,
-    'ym_client_id' => $ym_client_id,
-];
-$sourceLines = [];
-foreach ($sourceFields as $k => $v) {
-    if ($v !== '') {
-        $sourceLines[] = $k . ': ' . $v;
-    }
+// ── Блок «Источник» (строки UTM всегда присутствуют, даже с пустым значением,
+//    чтобы было видно, что заявка пришла без меток) ─────────────────────────
+$sourceText =
+    "utm_source: " . $utm_source . "\n" .
+    "utm_medium: " . $utm_medium . "\n" .
+    "utm_campaign: " . $utm_campaign . "\n" .
+    "utm_term: " . $utm_term . "\n" .
+    "utm_content: " . $utm_content . "\n" .
+    "Реферер: " . $referrer . "\n" .
+    "ym_client_id: " . $ym_client_id;
+// yclid показываем только при наличии (Яндекс.Директ) — чтобы не терять click id
+if ($yclid !== '') {
+    $sourceText .= "\nyclid: " . $yclid;
 }
-$sourceText = $sourceLines ? implode("\n", $sourceLines) : 'нет данных';
 
 // ── Дата/время по Москве (таймзона задана явно, не зависит от сервера) ───────
 $now = new DateTime('now', new DateTimeZone('Europe/Moscow'));
@@ -190,9 +188,9 @@ if ($DB_NAME !== '' && $DB_USER !== '') {
         ]);
         $stmt = $pdo->prepare(
             'INSERT INTO leads (name, phone, child_age, created_at, source, '
-            . 'utm_source, utm_medium, utm_campaign, utm_term, utm_content, yclid, ym_client_id) '
+            . 'utm_source, utm_medium, utm_campaign, utm_term, utm_content, yclid, ym_client_id, referrer) '
             . 'VALUES (:name, :phone, :child_age, NOW(), :source, '
-            . ':utm_source, :utm_medium, :utm_campaign, :utm_term, :utm_content, :yclid, :ym_client_id)'
+            . ':utm_source, :utm_medium, :utm_campaign, :utm_term, :utm_content, :yclid, :ym_client_id, :referrer)'
         );
         $stmt->execute([
             ':name'         => $name,
@@ -206,6 +204,7 @@ if ($DB_NAME !== '' && $DB_USER !== '') {
             ':utm_content'  => $utm_content,
             ':yclid'        => $yclid,
             ':ym_client_id' => $ym_client_id,
+            ':referrer'     => $referrer,
         ]);
         $leadId = (int) $pdo->lastInsertId();
     } catch (Throwable $e) {
