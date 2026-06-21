@@ -36,21 +36,20 @@
     <link rel="preload" href="/fonts/golos-cyrillic-400.woff2" as="font" type="font/woff2" crossorigin />
 
     <!-- Yandex.Metrika counter -->
-    <!-- TODO: вставить номер счётчика вместо XXXXXXXX (тот же — в src/lib/metrika.ts), затем раскомментировать блок.
-         Цели отправляются из кода: lead_form (успешная отправка формы) и cta_click (клики по CTA).
     <script type="text/javascript">
-      (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
-      m[i].l=1*new Date();
-      for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
-      k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
-      (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
-      ym(XXXXXXXX, "init", { clickmap:true, trackLinks:true, accurateTrackBounce:true });
+        (function(m,e,t,r,i,k,a){
+            m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+            m[i].l=1*new Date();
+            for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+            k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+        })(window, document,'script','https://mc.yandex.ru/metrika/tag.js', 'ym');
+        ym(96429194, 'init', {webvisor:true, clickmap:true, referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
     </script>
-    <noscript><div><img src="https://mc.yandex.ru/watch/XXXXXXXX" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-    -->
-    <!-- /Yandex.Metrika counter -->
+    <!-- /Yandex.Metrika counter (noscript-пиксель — в <body>, т.к. <div> в <noscript> внутри <head> невалиден) -->
   </head>
   <body>
+    <!-- Yandex.Metrika noscript-пиксель (счётчик 96429194) -->
+    <noscript><div><img src="https://mc.yandex.ru/watch/96429194" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
     <a class="sr-only" href="#main">Перейти к содержанию</a>
     <!--app-->
     <script type="module" src="/src/main.ts"></script>
