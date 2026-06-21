@@ -184,9 +184,9 @@ export function initForm(root: ParentNode = document): void {
     return ok;
   }
 
-  function showSuccess(): void {
+  function showSuccess(fireGoal = true): void {
     form!.classList.add('is-sent');
-    reachGoal('lead_form'); // цель Яндекс.Метрики
+    if (fireGoal) reachGoal('lead_form'); // цель Метрики (96429194) — только для реальной заявки
     form!.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
@@ -195,9 +195,9 @@ export function initForm(root: ParentNode = document): void {
     e.preventDefault();
     if (sending) return;
 
-    // honeypot заполнен → бот: имитируем успех, ничего не отправляя
+    // honeypot заполнен → бот: имитируем успех, ничего не отправляя и не засчитывая цель
     if (hpEl.value.trim() !== '') {
-      showSuccess();
+      showSuccess(false);
       return;
     }
     if (!validate()) {
