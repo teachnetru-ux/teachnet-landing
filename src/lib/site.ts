@@ -7,8 +7,8 @@ export const SITE = {
   city: 'Казань',
   phoneDisplay: '+7 (993) 415-14-34',
   phoneHref: 'tel:+79934151434',
-  email: 'teachnet.ru@yandex.ru',
-  emailHref: 'mailto:teachnet.ru@yandex.ru',
+  email: 'hello@teachnet.ru',
+  emailHref: 'mailto:hello@teachnet.ru',
   nav: [
     { label: 'Программы', href: '#programs' },
     { label: 'Цена', href: '#price' },
