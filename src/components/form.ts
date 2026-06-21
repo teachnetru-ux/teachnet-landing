@@ -36,6 +36,7 @@ export function leadForm(): string {
       <input type="hidden" name="utm_term" />
       <input type="hidden" name="utm_content" />
       <input type="hidden" name="yclid" />
+      <input type="hidden" name="referrer" />
       <input type="hidden" name="ym_client_id" />
       <button type="submit" class="btn btn--block">Записаться бесплатно</button>
     </div>
@@ -72,6 +73,11 @@ function captureAttribution(): Record<string, string> {
       changed = true;
     }
   }
+  // первый реферер (document.referrer) сохраняем один раз — откуда пришёл пользователь
+  if (typeof stored.referrer === 'undefined') {
+    stored.referrer = document.referrer || '';
+    changed = true;
+  }
   if (changed) {
     try {
       localStorage.setItem(ATTR_STORAGE_KEY, JSON.stringify(stored));
@@ -96,6 +102,8 @@ function fillAttribution(form: HTMLFormElement): void {
     const el = form.elements.namedItem(key);
     if (el instanceof HTMLInputElement) el.value = attr[key] ?? '';
   }
+  const refEl = form.elements.namedItem('referrer');
+  if (refEl instanceof HTMLInputElement) refEl.value = attr.referrer ?? '';
   const ymEl = form.elements.namedItem('ym_client_id');
   if (ymEl instanceof HTMLInputElement) {
     // быстрый фолбэк из куки Метрики…
