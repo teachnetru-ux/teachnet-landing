@@ -6,7 +6,7 @@
  */
 import { icon } from '../lib/icons';
 import { SITE } from '../lib/site';
-import { reachGoal } from '../lib/metrika';
+import { reachGoal, getClientId } from '../lib/metrika';
 
 export function leadForm(): string {
   return `<form class="lead-form" id="lead-form" novalidate>
@@ -29,6 +29,14 @@ export function leadForm(): string {
       </label>
       <!-- honeypot: скрытое поле, заполняют только боты -->
       <input class="hp-field" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
+      <!-- источник трафика и идентификаторы Яндекса — заполняются на клиенте (см. initForm) -->
+      <input type="hidden" name="utm_source" />
+      <input type="hidden" name="utm_medium" />
+      <input type="hidden" name="utm_campaign" />
+      <input type="hidden" name="utm_term" />
+      <input type="hidden" name="utm_content" />
+      <input type="hidden" name="yclid" />
+      <input type="hidden" name="ym_client_id" />
       <button type="submit" class="btn btn--block">Записаться бесплатно</button>
     </div>
     <p class="form-foot micro">Перезвоним в течение 15 минут в рабочее время. Только чтобы согласовать время.</p>
@@ -41,6 +49,65 @@ export function leadForm(): string {
 }
 
 /* ---------- поведение ---------- */
+
+// ─── Источник трафика (UTM/yclid) + ClientID Метрики ───────────────────────
+// ключи, которые тянем из URL и сохраняем между переходами по сайту
+const ATTR_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'yclid'] as const;
+const ATTR_STORAGE_KEY = 'tn_attribution';
+
+/** Считывает UTM/yclid из URL, объединяет с сохранёнными ранее (URL в приоритете). */
+function captureAttribution(): Record<string, string> {
+  let stored: Record<string, string> = {};
+  try {
+    stored = JSON.parse(localStorage.getItem(ATTR_STORAGE_KEY) || '{}') || {};
+  } catch {
+    stored = {};
+  }
+  const params = new URLSearchParams(window.location.search);
+  let changed = false;
+  for (const key of ATTR_KEYS) {
+    const val = params.get(key);
+    if (val) {
+      stored[key] = val;
+      changed = true;
+    }
+  }
+  if (changed) {
+    try {
+      localStorage.setItem(ATTR_STORAGE_KEY, JSON.stringify(stored));
+    } catch {
+      /* localStorage недоступен — не критично */
+    }
+  }
+  return stored;
+}
+
+/** Значение cookie по имени (фолбэк _ym_uid → ClientID). */
+function readCookie(name: string): string {
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const m = document.cookie.match(new RegExp('(?:^|; )' + escaped + '=([^;]*)'));
+  return m ? decodeURIComponent(m[1]) : '';
+}
+
+/** Заполняет скрытые поля формы источником трафика и ClientID Метрики. */
+function fillAttribution(form: HTMLFormElement): void {
+  const attr = captureAttribution();
+  for (const key of ATTR_KEYS) {
+    const el = form.elements.namedItem(key);
+    if (el instanceof HTMLInputElement) el.value = attr[key] ?? '';
+  }
+  const ymEl = form.elements.namedItem('ym_client_id');
+  if (ymEl instanceof HTMLInputElement) {
+    // быстрый фолбэк из куки Метрики…
+    const cookieId = readCookie('_ym_uid');
+    if (cookieId) ymEl.value = cookieId;
+    // …и уточнение через API Метрики (надёжнее), когда счётчик доступен
+    getClientId((clientId) => {
+      if (clientId) ymEl.value = String(clientId);
+    });
+  }
+}
+
 function formatPhone(value: string): string {
   let digits = value.replace(/\D/g, '');
   if (digits.startsWith('8')) digits = '7' + digits.slice(1);
@@ -66,6 +133,9 @@ function setError(input: Element, on: boolean): void {
 export function initForm(root: ParentNode = document): void {
   const form = root.querySelector<HTMLFormElement>('#lead-form');
   if (!form) return;
+
+  // захват источника трафика и ClientID в скрытые поля (до отправки)
+  fillAttribution(form);
 
   const nameEl = form.elements.namedItem('name') as HTMLInputElement;
   const phoneEl = form.elements.namedItem('phone') as HTMLInputElement;

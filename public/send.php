@@ -15,8 +15,17 @@
 // Конфиг с секретами лежит выше веб-корня (вне зоны FTP-деплоя).
 // Путь '/../../' может потребовать подгонки под реальное размещение на хостинге.
 $cfg = @include __DIR__ . '/../../send_config.php';
+if (!is_array($cfg)) {
+    $cfg = [];
+}
 $BOT_TOKEN = $cfg['bot_token'] ?? '';
 $CHAT_ID   = $cfg['chat_id']   ?? '';
+// Дополнительные каналы (необязательны): БД и email
+$DB_HOST   = $cfg['db_host']   ?? 'localhost';
+$DB_NAME   = $cfg['db_name']   ?? '';
+$DB_USER   = $cfg['db_user']   ?? '';
+$DB_PASS   = $cfg['db_pass']   ?? '';
+$EMAIL_TO  = $cfg['email_to']  ?? '';
 
 // --- только POST ---
 header('Content-Type: application/json; charset=utf-8');
@@ -39,6 +48,15 @@ $phone   = trim($_POST['phone'] ?? '');
 $age     = trim($_POST['age'] ?? '');
 $consent = trim($_POST['consent'] ?? '');
 
+// доп. поля источника трафика и идентификаторы Яндекса (необязательные)
+$utm_source   = trim($_POST['utm_source'] ?? '');
+$utm_medium   = trim($_POST['utm_medium'] ?? '');
+$utm_campaign = trim($_POST['utm_campaign'] ?? '');
+$utm_term     = trim($_POST['utm_term'] ?? '');
+$utm_content  = trim($_POST['utm_content'] ?? '');
+$yclid        = trim($_POST['yclid'] ?? '');
+$ym_client_id = trim($_POST['ym_client_id'] ?? '');
+
 $digits = preg_replace('/\D/', '', $phone);
 
 if (mb_strlen($name) < 2 || strlen($digits) !== 11 || $age === '' || $consent === '') {
@@ -53,12 +71,31 @@ if ($BOT_TOKEN === '' || $CHAT_ID === '') {
     exit;
 }
 
+// --- блок «Источник» (только непустые поля; используется в Telegram и email) ---
+$sourceFields = [
+    'utm_source'   => $utm_source,
+    'utm_medium'   => $utm_medium,
+    'utm_campaign' => $utm_campaign,
+    'utm_term'     => $utm_term,
+    'utm_content'  => $utm_content,
+    'yclid'        => $yclid,
+    'ym_client_id' => $ym_client_id,
+];
+$sourceLines = [];
+foreach ($sourceFields as $k => $v) {
+    if ($v !== '') {
+        $sourceLines[] = $k . ': ' . $v;
+    }
+}
+$sourceText = $sourceLines ? implode("\n", $sourceLines) : 'нет данных';
+
 // --- сообщение ---
 $text =
     "Новая заявка с лендинга TEACHNET\n\n" .
     "Имя: " . $name . "\n" .
     "Телефон: " . $phone . "\n" .
-    "Возраст ребёнка: " . $age;
+    "Возраст ребёнка: " . $age .
+    "\n\n— Источник —\n" . $sourceText;
 
 // --- отправка в Telegram ---
 $url = "https://api.telegram.org/bot{$BOT_TOKEN}/sendMessage";
@@ -83,6 +120,63 @@ if ($response === false || $httpCode !== 200) {
     http_response_code(502);
     echo json_encode(['ok' => false, 'error' => 'telegram_failed']);
     exit;
+}
+
+// ─── Дополнительные каналы (best-effort) ───────────────────────────────────
+// Telegram — основной канал и уже доставлен. БД и email — вспомогательные:
+// любые их ошибки логируются, но НЕ влияют на успешный ответ пользователю,
+// чтобы заявка не «терялась» из-за проблем с базой или почтой.
+
+// 1) Запись в MySQL через PDO (если в конфиге заданы параметры БД)
+if ($DB_NAME !== '' && $DB_USER !== '') {
+    try {
+        $dsn = "mysql:host={$DB_HOST};dbname={$DB_NAME};charset=utf8mb4";
+        $pdo = new PDO($dsn, $DB_USER, $DB_PASS, [
+            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_TIMEOUT            => 5,
+        ]);
+        $stmt = $pdo->prepare(
+            'INSERT INTO leads (name, phone, child_age, created_at, source, '
+            . 'utm_source, utm_medium, utm_campaign, utm_term, utm_content, yclid, ym_client_id) '
+            . 'VALUES (:name, :phone, :child_age, NOW(), :source, '
+            . ':utm_source, :utm_medium, :utm_campaign, :utm_term, :utm_content, :yclid, :ym_client_id)'
+        );
+        $stmt->execute([
+            ':name'         => $name,
+            ':phone'        => $phone,
+            ':child_age'    => $age,
+            ':source'       => 'website',
+            ':utm_source'   => $utm_source,
+            ':utm_medium'   => $utm_medium,
+            ':utm_campaign' => $utm_campaign,
+            ':utm_term'     => $utm_term,
+            ':utm_content'  => $utm_content,
+            ':yclid'        => $yclid,
+            ':ym_client_id' => $ym_client_id,
+        ]);
+    } catch (Throwable $e) {
+        error_log('TeachNet lead: ошибка записи в БД — ' . $e->getMessage());
+    }
+}
+
+// 2) Дубль заявки на email через mail() (если задан адрес получателя)
+if ($EMAIL_TO !== '') {
+    try {
+        $host    = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $subject = '=?UTF-8?B?' . base64_encode('Новая заявка с лендинга TEACHNET') . '?=';
+        $body    =
+            "Имя: " . $name . "\n" .
+            "Телефон: " . $phone . "\n" .
+            "Возраст ребёнка: " . $age .
+            "\n\n— Источник —\n" . $sourceText;
+        $headers =
+            "From: no-reply@" . $host . "\r\n" .
+            "Content-Type: text/plain; charset=utf-8\r\n";
+        @mail($EMAIL_TO, $subject, $body, $headers);
+    } catch (Throwable $e) {
+        error_log('TeachNet lead: ошибка отправки email — ' . $e->getMessage());
+    }
 }
 
 echo json_encode(['ok' => true]);
