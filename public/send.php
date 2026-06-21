@@ -1,69 +1,153 @@
 <?php
 /**
- * TeachNet — приём заявки с лендинга и отправка в Telegram (Bot API).
- * Поля формы: name, phone, age, consent + honeypot (website).
+ * TeachNet — приём заявки с лендинга: Telegram (основной канал) + MySQL + email.
+ * Поля формы: name, phone, age, consent + honeypot (website) + источник (utm_*, yclid, ym_client_id).
  *
- * ┌─ ЗАПОЛНИТЬ ─────────────────────────────────────────────────────────────┐
- * │ Создайте бота у @BotFather, получите токен. Узнайте chat_id (напр.       │
- * │ через @getmyid_bot или @userinfobot).                                    │
- * │ Значения хранятся ВНЕ веб-корня в файле send_config.php (см. ниже),       │
- * │ который создаётся вручную на сервере и не попадает в репозиторий/деплой.  │
- * │ Формат send_config.php:                                                   │
- * │   <?php return ['bot_token' => '1234567890:AA...', 'chat_id' => '...'];   │
- * └──────────────────────────────────────────────────────────────────────────┘
+ * Секреты — в send_config.php ВЫШЕ веб-корня (вне зоны деплоя). Формат:
+ *   <?php return [
+ *     'bot_token' => '...', 'chat_id' => '...',
+ *     'db_host' => 'localhost', 'db_name' => '...', 'db_user' => '...', 'db_pass' => '...',
+ *     'email_to' => '...',
+ *   ];
  */
-// Конфиг с секретами лежит выше веб-корня (вне зоны FTP-деплоя).
-// Путь '/../../' может потребовать подгонки под реальное размещение на хостинге.
+
+// ── Конфиг (выше веб-корня; путь '/../../' при необходимости подгоняется) ──
 $cfg = @include __DIR__ . '/../../send_config.php';
 if (!is_array($cfg)) {
     $cfg = [];
 }
 $BOT_TOKEN = $cfg['bot_token'] ?? '';
 $CHAT_ID   = $cfg['chat_id']   ?? '';
-// Дополнительные каналы (необязательны): БД и email
 $DB_HOST   = $cfg['db_host']   ?? 'localhost';
 $DB_NAME   = $cfg['db_name']   ?? '';
 $DB_USER   = $cfg['db_user']   ?? '';
 $DB_PASS   = $cfg['db_pass']   ?? '';
 $EMAIL_TO  = $cfg['email_to']  ?? '';
 
-// --- только POST ---
 header('Content-Type: application/json; charset=utf-8');
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+
+// ── Хелперы ───────────────────────────────────────────────────────────────
+
+/** Безопасно получить строковое POST-поле (массивы → пустая строка). */
+function post(string $key): string {
+    $v = $_POST[$key] ?? '';
+    return is_string($v) ? $v : '';
+}
+
+/** Санитизация ввода: убрать управляющие символы (вкл. переводы строк), обрезать длину. */
+function clean(string $s, int $maxLen): string {
+    $s = preg_replace('/[\x00-\x1F\x7F]+/', ' ', $s) ?? $s;
+    $s = trim($s);
+    if (mb_strlen($s) > $maxLen) {
+        $s = mb_substr($s, 0, $maxLen);
+    }
+    return $s;
+}
+
+/**
+ * Реальный IP клиента. X-Forwarded-For учитываем ТОЛЬКО если прямое подключение
+ * пришло от приватного/локального прокси — иначе XFF легко подделать и обойти лимит.
+ */
+function client_ip(): string {
+    $remote = $_SERVER['REMOTE_ADDR'] ?? '';
+    // если REMOTE_ADDR — публичный IP, доверяем ему и игнорируем XFF
+    if (filter_var($remote, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false) {
+        return $remote;
+    }
+    // иначе (за прокси/CDN) — берём первый публичный IP из цепочки XFF
+    foreach (explode(',', $_SERVER['HTTP_X_FORWARDED_FOR'] ?? '') as $part) {
+        $ip = trim($part);
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false) {
+            return $ip;
+        }
+    }
+    return $remote !== '' ? $remote : 'unknown';
+}
+
+/** Простой rate limit на файлах: не более $max заявок за $window секунд с одного IP. */
+function rate_limited(string $ip, int $max = 5, int $window = 600): bool {
+    $dir = sys_get_temp_dir() . '/tn_ratelimit';
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0700, true);
+    }
+    if (!is_dir($dir) || !is_writable($dir)) {
+        return false; // нет хранилища — не блокируем (fail-open), форму не ломаем
+    }
+    $fp = @fopen($dir . '/' . sha1($ip) . '.json', 'c+');
+    if ($fp === false) {
+        return false;
+    }
+    $now = time();
+    $exceeded = false;
+    if (flock($fp, LOCK_EX)) {
+        $hits = json_decode(stream_get_contents($fp) ?: '[]', true);
+        if (!is_array($hits)) {
+            $hits = [];
+        }
+        // оставляем только попадания внутри окна
+        $hits = array_values(array_filter($hits, static function ($t) use ($now, $window) {
+            return is_int($t) && ($now - $t) < $window;
+        }));
+        if (count($hits) >= $max) {
+            $exceeded = true;
+        } else {
+            $hits[] = $now;
+            ftruncate($fp, 0);
+            rewind($fp);
+            fwrite($fp, json_encode($hits));
+        }
+        fflush($fp);
+        flock($fp, LOCK_UN);
+    }
+    fclose($fp);
+    return $exceeded;
+}
+
+// ── Только POST ──────────────────────────────────────────────────────────────
+if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
     http_response_code(405);
     echo json_encode(['ok' => false, 'error' => 'method_not_allowed']);
     exit;
 }
 
-// --- honeypot: поле website должно быть пустым (его заполняют боты) ---
-if (!empty(trim($_POST['website'] ?? ''))) {
-    // тихо «успех», ничего не отправляя
+// ── Honeypot: поле website заполняют только боты → тихий «успех» ─────────────
+if (post('website') !== '') {
     echo json_encode(['ok' => true]);
     exit;
 }
 
-// --- сбор и базовая валидация ---
-$name    = trim($_POST['name'] ?? '');
-$phone   = trim($_POST['phone'] ?? '');
-$age     = trim($_POST['age'] ?? '');
-$consent = trim($_POST['consent'] ?? '');
+// ── Rate limiting по IP (защита от флуда) ────────────────────────────────────
+if (rate_limited(client_ip())) {
+    http_response_code(429);
+    echo json_encode(['ok' => false, 'error' => 'rate_limited']);
+    exit;
+}
 
-// доп. поля источника трафика и идентификаторы Яндекса (необязательные)
-$utm_source   = trim($_POST['utm_source'] ?? '');
-$utm_medium   = trim($_POST['utm_medium'] ?? '');
-$utm_campaign = trim($_POST['utm_campaign'] ?? '');
-$utm_term     = trim($_POST['utm_term'] ?? '');
-$utm_content  = trim($_POST['utm_content'] ?? '');
-$yclid        = trim($_POST['yclid'] ?? '');
-$ym_client_id = trim($_POST['ym_client_id'] ?? '');
+// ── Сбор и санитизация ───────────────────────────────────────────────────────
+$name    = clean(post('name'), 100);
+$digits  = preg_replace('/\D/', '', post('phone'));
+$ageInt  = (int) post('age');
+$consent = trim(post('consent'));
 
-$digits = preg_replace('/\D/', '', $phone);
+$utm_source   = clean(post('utm_source'), 255);
+$utm_medium   = clean(post('utm_medium'), 255);
+$utm_campaign = clean(post('utm_campaign'), 255);
+$utm_term     = clean(post('utm_term'), 255);
+$utm_content  = clean(post('utm_content'), 255);
+$yclid        = clean(post('yclid'), 255);
+$ym_client_id = clean(post('ym_client_id'), 255);
 
-if (mb_strlen($name) < 2 || strlen($digits) !== 11 || $age === '' || $consent === '') {
+// ── Валидация ────────────────────────────────────────────────────────────────
+if (mb_strlen($name) < 2 || strlen($digits) !== 11 || $ageInt < 3 || $ageInt > 18 || $consent === '') {
     http_response_code(422);
     echo json_encode(['ok' => false, 'error' => 'validation']);
     exit;
 }
+
+// каноничные (заведомо чистые) значения для хранения/отправки
+$sub   = substr($digits, -10);
+$phone = '+7 (' . substr($sub, 0, 3) . ') ' . substr($sub, 3, 3) . '-' . substr($sub, 6, 2) . '-' . substr($sub, 8, 2);
+$age   = (string) $ageInt;
 
 if ($BOT_TOKEN === '' || $CHAT_ID === '') {
     http_response_code(500);
@@ -71,7 +155,7 @@ if ($BOT_TOKEN === '' || $CHAT_ID === '') {
     exit;
 }
 
-// --- блок «Источник» (только непустые поля; используется в Telegram и email) ---
+// ── Блок «Источник» (только непустые поля) ───────────────────────────────────
 $sourceFields = [
     'utm_source'   => $utm_source,
     'utm_medium'   => $utm_medium,
@@ -89,12 +173,12 @@ foreach ($sourceFields as $k => $v) {
 }
 $sourceText = $sourceLines ? implode("\n", $sourceLines) : 'нет данных';
 
-// --- дата/время по Москве (таймзона задана явно, не зависит от настроек сервера) ---
+// ── Дата/время по Москве (таймзона задана явно, не зависит от сервера) ───────
 $now = new DateTime('now', new DateTimeZone('Europe/Moscow'));
 $timeText = $now->format('d.m.Y H:i') . ' (МСК)';
 
-// --- запись в БД ДО Telegram, чтобы получить номер заявки (lastInsertId) ---
-// best-effort: если БД недоступна — $leadId останется null, Telegram всё равно уйдёт.
+// ── Запись в БД ДО Telegram — чтобы получить номер заявки (best-effort) ───────
+// Все запросы — prepared statements с плейсхолдерами (без конкатенации ввода).
 $leadId = null;
 if ($DB_NAME !== '' && $DB_USER !== '') {
     try {
@@ -129,7 +213,9 @@ if ($DB_NAME !== '' && $DB_USER !== '') {
     }
 }
 
-// --- сообщение (источник + время + номер заявки внизу) ---
+// ── Сообщение (источник + время + номер заявки внизу) ────────────────────────
+// parse_mode не используется → Telegram трактует текст как plain (разметку не
+// инжектнуть). Поля уже очищены от управляющих символов и переводов строк.
 $text =
     "Новая заявка с лендинга TEACHNET\n\n" .
     "Имя: " . $name . "\n" .
@@ -141,14 +227,13 @@ if ($leadId) {
     $text .= "\nЗаявка #" . $leadId;
 }
 
-// --- отправка в Telegram ---
+// ── Отправка в Telegram (основной канал) ─────────────────────────────────────
 $url = "https://api.telegram.org/bot{$BOT_TOKEN}/sendMessage";
 $payload = http_build_query([
     'chat_id' => $CHAT_ID,
     'text'    => $text,
     'disable_web_page_preview' => true,
 ]);
-
 $ch = curl_init($url);
 curl_setopt_array($ch, [
     CURLOPT_RETURNTRANSFER => true,
@@ -166,12 +251,14 @@ if ($response === false || $httpCode !== 200) {
     exit;
 }
 
-// ─── Email-дубль (best-effort) ─────────────────────────────────────────────
-// Telegram доставлен (основной канал). Письмо — вспомогательное: ошибки
-// логируются, но НЕ влияют на успешный ответ пользователю.
+// ── Email-дубль (best-effort) ────────────────────────────────────────────────
 if ($EMAIL_TO !== '') {
     try {
-        $host    = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        // хост для From чистим от чужеродных символов (защита от инъекции заголовков)
+        $host = preg_replace('/[^A-Za-z0-9.\-:]/', '', $_SERVER['HTTP_HOST'] ?? 'localhost');
+        if ($host === '') {
+            $host = 'localhost';
+        }
         $subject = '=?UTF-8?B?' . base64_encode('Новая заявка с лендинга TEACHNET') . '?=';
         $body    =
             "Имя: " . $name . "\n" .
