@@ -89,45 +89,13 @@ foreach ($sourceFields as $k => $v) {
 }
 $sourceText = $sourceLines ? implode("\n", $sourceLines) : 'нет данных';
 
-// --- сообщение ---
-$text =
-    "Новая заявка с лендинга TEACHNET\n\n" .
-    "Имя: " . $name . "\n" .
-    "Телефон: " . $phone . "\n" .
-    "Возраст ребёнка: " . $age .
-    "\n\n— Источник —\n" . $sourceText;
+// --- дата/время по Москве (таймзона задана явно, не зависит от настроек сервера) ---
+$now = new DateTime('now', new DateTimeZone('Europe/Moscow'));
+$timeText = $now->format('d.m.Y H:i') . ' (МСК)';
 
-// --- отправка в Telegram ---
-$url = "https://api.telegram.org/bot{$BOT_TOKEN}/sendMessage";
-$payload = http_build_query([
-    'chat_id' => $CHAT_ID,
-    'text'    => $text,
-    'disable_web_page_preview' => true,
-]);
-
-$ch = curl_init($url);
-curl_setopt_array($ch, [
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_POST           => true,
-    CURLOPT_POSTFIELDS     => $payload,
-    CURLOPT_TIMEOUT        => 15,
-]);
-$response = curl_exec($ch);
-$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
-
-if ($response === false || $httpCode !== 200) {
-    http_response_code(502);
-    echo json_encode(['ok' => false, 'error' => 'telegram_failed']);
-    exit;
-}
-
-// ─── Дополнительные каналы (best-effort) ───────────────────────────────────
-// Telegram — основной канал и уже доставлен. БД и email — вспомогательные:
-// любые их ошибки логируются, но НЕ влияют на успешный ответ пользователю,
-// чтобы заявка не «терялась» из-за проблем с базой или почтой.
-
-// 1) Запись в MySQL через PDO (если в конфиге заданы параметры БД)
+// --- запись в БД ДО Telegram, чтобы получить номер заявки (lastInsertId) ---
+// best-effort: если БД недоступна — $leadId останется null, Telegram всё равно уйдёт.
+$leadId = null;
 if ($DB_NAME !== '' && $DB_USER !== '') {
     try {
         $dsn = "mysql:host={$DB_HOST};dbname={$DB_NAME};charset=utf8mb4";
@@ -155,12 +123,52 @@ if ($DB_NAME !== '' && $DB_USER !== '') {
             ':yclid'        => $yclid,
             ':ym_client_id' => $ym_client_id,
         ]);
+        $leadId = (int) $pdo->lastInsertId();
     } catch (Throwable $e) {
         error_log('TeachNet lead: ошибка записи в БД — ' . $e->getMessage());
     }
 }
 
-// 2) Дубль заявки на email через mail() (если задан адрес получателя)
+// --- сообщение (источник + время + номер заявки внизу) ---
+$text =
+    "Новая заявка с лендинга TEACHNET\n\n" .
+    "Имя: " . $name . "\n" .
+    "Телефон: " . $phone . "\n" .
+    "Возраст ребёнка: " . $age .
+    "\n\n— Источник —\n" . $sourceText .
+    "\n\nВремя: " . $timeText;
+if ($leadId) {
+    $text .= "\nЗаявка #" . $leadId;
+}
+
+// --- отправка в Telegram ---
+$url = "https://api.telegram.org/bot{$BOT_TOKEN}/sendMessage";
+$payload = http_build_query([
+    'chat_id' => $CHAT_ID,
+    'text'    => $text,
+    'disable_web_page_preview' => true,
+]);
+
+$ch = curl_init($url);
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_POST           => true,
+    CURLOPT_POSTFIELDS     => $payload,
+    CURLOPT_TIMEOUT        => 15,
+]);
+$response = curl_exec($ch);
+$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+curl_close($ch);
+
+if ($response === false || $httpCode !== 200) {
+    http_response_code(502);
+    echo json_encode(['ok' => false, 'error' => 'telegram_failed']);
+    exit;
+}
+
+// ─── Email-дубль (best-effort) ─────────────────────────────────────────────
+// Telegram доставлен (основной канал). Письмо — вспомогательное: ошибки
+// логируются, но НЕ влияют на успешный ответ пользователю.
 if ($EMAIL_TO !== '') {
     try {
         $host    = $_SERVER['HTTP_HOST'] ?? 'localhost';
@@ -169,7 +177,9 @@ if ($EMAIL_TO !== '') {
             "Имя: " . $name . "\n" .
             "Телефон: " . $phone . "\n" .
             "Возраст ребёнка: " . $age .
-            "\n\n— Источник —\n" . $sourceText;
+            "\n\n— Источник —\n" . $sourceText .
+            "\n\nВремя: " . $timeText .
+            ($leadId ? "\nЗаявка #" . $leadId : '');
         $headers =
             "From: no-reply@" . $host . "\r\n" .
             "Content-Type: text/plain; charset=utf-8\r\n";
