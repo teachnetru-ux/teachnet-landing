@@ -2,7 +2,9 @@ import { defineConfig } from 'vite';
 import tailwindcss from '@tailwindcss/vite';
 import { readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { basename } from 'node:path';
 import { renderPage } from './src/page';
+import { renderLegalPage } from './src/legal';
 
 // Контент страницы собирается из секций (чистые функции) и встраивается в index.html
 // на этапе сборки/дев-сервера — статичный HTML, без рантайм-инъекции (важно для SEO и LCP,
@@ -49,6 +51,10 @@ function resolvePhotos(html: string): string {
   );
 }
 
+// Точки входа: главная (index.html) + отдельные юридические страницы.
+// Каждая — реальный статичный HTML, доступный по своему URL.
+const pageInput = (name: string) => fileURLToPath(new URL(`./${name}.html`, import.meta.url));
+
 export default defineConfig({
   base,
   plugins: [
@@ -57,12 +63,26 @@ export default defineConfig({
       name: 'teachnet:render-page',
       transformIndexHtml: {
         order: 'pre',
-        handler: (html) => resolvePhotos(html.replace('<!--app-->', renderPage())),
+        handler(html, ctx) {
+          // имя страницы по её html-файлу: index | privacy | personal-data-consent | cookie-policy
+          const slug = basename(ctx.path).replace(/\.html$/, '');
+          const legal = slug !== 'index' ? renderLegalPage(slug) : '';
+          const body = legal || renderPage();
+          return resolvePhotos(html.replace('<!--app-->', body));
+        },
       },
     },
   ],
   build: {
     target: 'es2020',
     cssCodeSplit: false,
+    rollupOptions: {
+      input: {
+        main: pageInput('index'),
+        privacy: pageInput('privacy'),
+        'personal-data-consent': pageInput('personal-data-consent'),
+        'cookie-policy': pageInput('cookie-policy'),
+      },
+    },
   },
 });
