@@ -11,11 +11,20 @@
     Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://mc.yandex.ru https://mc.yandex.com https://yastatic.net https://*.yandex.ru; connect-src 'self' https://mc.yandex.ru https://mc.yandex.com https://yastatic.net https://*.yandex.ru wss://mc.yandex.ru wss://*.yandex.ru; img-src 'self' data: https://mc.yandex.ru https://mc.yandex.com https://yastatic.net https://*.yandex.ru; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-src 'self' https://mc.yandex.ru https://mc.yandex.com https://*.yandex.ru; base-uri 'self'; form-action 'self'"
 </IfModule>
 
-# ── Защита служебных файлов (#4) ──
-# Скрытые файлы и папки (.git, .env, .htaccess и т.п.), кроме .well-known
+# ── Маршрутизация и защита служебных файлов ──
 <IfModule mod_rewrite.c>
     RewriteEngine On
+    RewriteBase /
+
+    # (#4) Скрытые файлы и папки (.git, .env, .htaccess и т.п.), кроме .well-known
     RewriteRule (^|/)\.(?!well-known/) - [F,L]
+
+    # Чистые URL: /privacy → /privacy.html (если такой файл существует).
+    # Реальные файлы и каталоги (assets, images, send.php и т.п.) не затрагиваются.
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{DOCUMENT_ROOT}/$1.html -f
+    RewriteRule ^(.+?)/?$ /$1.html [L]
 </IfModule>
 
 # Конфиг с секретами (на всякий случай, если окажется в веб-корне) и прочие

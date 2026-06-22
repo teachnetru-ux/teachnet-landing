@@ -14,11 +14,11 @@ export const SITE = {
     { label: 'Цена', href: '#price' },
     { label: 'Вопросы', href: '#faq' },
   ],
-  // TODO: подставить реальные URL юридических документов
+  // Отдельные статические страницы (см. content/ и *.html в корне проекта)
   legal: {
-    consent: '#', // Согласие на обработку персональных данных
-    privacy: '#', // Политика конфиденциальности
-    cookie: '#', // Политика использования cookie
+    consent: '/personal-data-consent', // Согласие на обработку персональных данных
+    privacy: '/privacy', // Политика конфиденциальности
+    cookie: '/cookie-policy', // Политика использования cookie
   },
   social: {
     vk: 'https://vk.com/teachnetru',
