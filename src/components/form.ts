@@ -8,7 +8,34 @@ import { icon } from '../lib/icons';
 import { SITE } from '../lib/site';
 import { reachGoal, getClientId } from '../lib/metrika';
 
-export function leadForm(): string {
+export interface LeadFormOptions {
+  /** скрытое поле source (напр. 'child-masterclass'); по умолчанию не добавляется */
+  source?: string;
+  /** поле возраста: текстовый ввод (по умолчанию) или выпадающий список диапазонов */
+  ageType?: 'input' | 'select';
+  /** подпись кнопки отправки */
+  submitLabel?: string;
+}
+
+export function leadForm(opts: LeadFormOptions = {}): string {
+  const { source = '', ageType = 'input', submitLabel = 'Записаться бесплатно' } = opts;
+
+  const ageField =
+    ageType === 'select'
+      ? `<select class="field field--select" name="age" autocomplete="off" aria-label="Сколько лет ребёнку">
+          <option value="" disabled selected>Сколько лет ребёнку</option>
+          <option value="6–8">6–8</option>
+          <option value="9–12">9–12</option>
+          <option value="13–16">13–16</option>
+        </select>
+        <span class="field-error">Выберите возраст ребёнка</span>`
+      : `<input class="field" type="text" name="age" placeholder="Возраст ребёнка" inputmode="numeric" maxlength="2" autocomplete="off" aria-label="Возраст ребёнка" />
+        <span class="field-error">Укажите возраст ребёнка</span>`;
+
+  const sourceField = source
+    ? `<input type="hidden" name="source" value="${source}" />`
+    : '';
+
   return `<form class="lead-form" id="lead-form" novalidate>
     <div class="form-grid">
       <div class="field-row">
@@ -19,10 +46,7 @@ export function leadForm(): string {
         <input class="field" type="tel" name="phone" placeholder="+7 (___) ___-__-__" inputmode="tel" autocomplete="tel" aria-label="Телефон" />
         <span class="field-error">Введите номер телефона полностью</span>
       </div>
-      <div class="field-row">
-        <input class="field" type="text" name="age" placeholder="Возраст ребёнка" inputmode="numeric" maxlength="2" autocomplete="off" aria-label="Возраст ребёнка" />
-        <span class="field-error">Укажите возраст ребёнка</span>
-      </div>
+      <div class="field-row">${ageField}</div>
       <label class="consent">
         <input type="checkbox" name="consent" value="1" />
         <span>Я даю согласие на обработку <a href="${SITE.legal.consent}" target="_blank" rel="noopener">персональных данных</a></span>
@@ -38,7 +62,8 @@ export function leadForm(): string {
       <input type="hidden" name="yclid" />
       <input type="hidden" name="referrer" />
       <input type="hidden" name="ym_client_id" />
-      <button type="submit" class="btn btn--block">Записаться бесплатно</button>
+      ${sourceField}
+      <button type="submit" class="btn btn--block">${submitLabel}</button>
     </div>
     <p class="form-foot micro">Перезвоним в течение 15 минут в рабочее время. Только чтобы согласовать время.</p>
     <div class="form-success" role="status" aria-live="polite">
@@ -135,7 +160,9 @@ function setError(input: Element, on: boolean): void {
   const row = input.closest('.field-row, .consent');
   if (!row) return;
   row.classList.toggle('has-error', on);
-  if (input instanceof HTMLInputElement) input.setAttribute('aria-invalid', on ? 'true' : 'false');
+  if (input instanceof HTMLInputElement || input instanceof HTMLSelectElement) {
+    input.setAttribute('aria-invalid', on ? 'true' : 'false');
+  }
 }
 
 export function initForm(root: ParentNode = document): void {
@@ -147,7 +174,7 @@ export function initForm(root: ParentNode = document): void {
 
   const nameEl = form.elements.namedItem('name') as HTMLInputElement;
   const phoneEl = form.elements.namedItem('phone') as HTMLInputElement;
-  const ageEl = form.elements.namedItem('age') as HTMLInputElement;
+  const ageEl = form.elements.namedItem('age') as HTMLInputElement | HTMLSelectElement;
   const consentEl = form.elements.namedItem('consent') as HTMLInputElement;
   const hpEl = form.elements.namedItem('website') as HTMLInputElement;
 
@@ -158,14 +185,18 @@ export function initForm(root: ParentNode = document): void {
   phoneEl.addEventListener('focus', () => {
     if (!phoneEl.value) phoneEl.value = '+7 ';
   });
-  // возраст — только цифры
-  ageEl.addEventListener('input', () => {
-    ageEl.value = ageEl.value.replace(/\D/g, '').slice(0, 2);
-  });
+  // возраст: для текстового поля — только цифры; для select правка не нужна
+  if (ageEl instanceof HTMLInputElement) {
+    ageEl.addEventListener('input', () => {
+      ageEl.value = ageEl.value.replace(/\D/g, '').slice(0, 2);
+    });
+  }
 
-  // снимаем ошибку при правке
-  [nameEl, phoneEl, ageEl].forEach((el) =>
-    el.addEventListener('input', () => setError(el, false)),
+  // снимаем ошибку при правке/выборе
+  nameEl.addEventListener('input', () => setError(nameEl, false));
+  phoneEl.addEventListener('input', () => setError(phoneEl, false));
+  ageEl.addEventListener(ageEl instanceof HTMLSelectElement ? 'change' : 'input', () =>
+    setError(ageEl, false),
   );
   consentEl.addEventListener('change', () => setError(consentEl, false));
 
@@ -180,8 +211,14 @@ export function initForm(root: ParentNode = document): void {
       setError(phoneEl, true);
       ok = false;
     }
-    const age = Number(ageEl.value);
-    if (!ageEl.value || Number.isNaN(age) || age < 3 || age > 18) {
+    let ageOk: boolean;
+    if (ageEl instanceof HTMLSelectElement) {
+      ageOk = ageEl.value !== ''; // выбран один из диапазонов
+    } else {
+      const age = Number(ageEl.value);
+      ageOk = !!ageEl.value && !Number.isNaN(age) && age >= 3 && age <= 18;
+    }
+    if (!ageOk) {
       setError(ageEl, true);
       ok = false;
     }

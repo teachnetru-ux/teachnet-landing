@@ -908,3 +908,126 @@
   text-underline-offset: 2px;
   overflow-wrap: anywhere;
 }
+
+/* ============================================================
+   Страница /child — мастер-классы «Твой Ход»
+   ============================================================ */
+/* акцентный голубой для *выделенных* слов из брифа */
+.accent { color: rgb(67, 140, 203); }
+
+/* вторичная кнопка (контурная) — для «Узнать подробнее» */
+.btn--ghost {
+  background: transparent;
+  color: var(--brand);
+  border: 1.5px solid color-mix(in srgb, var(--brand) 45%, transparent);
+}
+.btn--ghost:hover {
+  background: color-mix(in srgb, var(--brand) 8%, #fff);
+  color: var(--brand);
+}
+
+/* выпадающий список в форме (возраст) */
+.field--select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 44px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23316397' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  cursor: pointer;
+}
+
+/* шапка страницы /child */
+.child-header { background: var(--bg-card); border-bottom: 1px solid var(--field-border); }
+.child-header__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 16px;
+  min-height: var(--header-h);
+  flex-wrap: wrap;
+  padding-block: 10px;
+}
+.child-status { font-size: 13px; font-weight: 500; color: var(--text-soft); white-space: nowrap; }
+@media (max-width: 480px) { .child-status { font-size: 12px; white-space: normal; } }
+
+/* hero */
+.child-hero { text-align: center; padding-top: 56px; }
+@media (min-width: 768px) { .child-hero { padding-top: 72px; } }
+.child-hero__title { max-width: 900px; margin-inline: auto; }
+.child-hero__sub { max-width: 640px; margin: 18px auto 0; }
+.child-hero__cta { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 28px; }
+
+/* статистика */
+.child-stats-section { padding-bottom: 8px; }
+.child-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+@media (max-width: 680px) { .child-stats { grid-template-columns: 1fr; } }
+.child-stat {
+  background: var(--bg-card);
+  border: 1px solid var(--field-border);
+  border-radius: var(--r-card);
+  padding: 28px;
+  text-align: center;
+}
+.child-stat__num { display: block; font-family: var(--font-head); font-weight: 700; font-size: clamp(28px, 4vw, 40px); color: var(--brand); line-height: 1.1; }
+.child-stat__label { display: block; margin-top: 8px; color: var(--text-soft); font-size: 15px; }
+
+/* «Твой Ход» */
+.child-tyhod__grid { display: grid; gap: 20px; align-items: start; }
+@media (min-width: 880px) { .child-tyhod__grid { grid-template-columns: 1fr 1.2fr; gap: 48px; } }
+.child-badges { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+
+.child-eyebrow { color: var(--brand); margin-bottom: 14px; }
+
+/* «Что получит ребёнок» */
+.child-benefit__label { display: block; color: var(--brand); font-weight: 600; font-size: 14px; margin-bottom: 10px; }
+
+/* галерея «Как это выглядит» */
+.child-gallery {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding: 8px var(--pad) 18px;
+}
+@media (min-width: 768px) { .child-gallery { padding-inline: var(--pad-desk); } }
+.child-gallery__img {
+  flex: 0 0 auto;
+  width: min(80vw, 360px);
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 18px;
+  scroll-snap-align: start;
+  background: #e7edf5;
+}
+
+/* тёмная секция «Структура занятия» */
+.section--dark { background: var(--footer-bg); color: #fff; }
+.section--dark .h2 { color: #fff; }
+.section--dark .lead { color: rgba(255, 255, 255, 0.75); }
+.section--dark .child-eyebrow { color: var(--brand-soft); }
+.child-structure { display: grid; gap: 28px; }
+@media (min-width: 980px) { .child-structure { grid-template-columns: 1.4fr 1fr; gap: 40px; align-items: start; } }
+.child-steps { display: flex; flex-direction: column; gap: 22px; }
+.child-step { display: flex; gap: 18px; align-items: flex-start; }
+.child-step__num { flex: none; min-width: 1.6em; font-family: var(--font-head); font-weight: 700; font-size: clamp(22px, 3vw, 30px); color: var(--brand-soft); }
+.child-step__title { margin-bottom: 6px; color: #fff; }
+.child-step__text { color: rgba(255, 255, 255, 0.72); line-height: 1.55; }
+.child-equip {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--r-card);
+  padding: 28px;
+}
+.child-equip .h3 { color: #fff; }
+.child-equip__lead { color: rgba(255, 255, 255, 0.72); margin: 12px 0 18px; line-height: 1.55; }
+.child-equip__list { display: flex; flex-direction: column; gap: 14px; }
+.child-equip__item { display: flex; gap: 12px; align-items: flex-start; color: rgba(255, 255, 255, 0.85); line-height: 1.5; }
+.child-equip__item strong { color: #fff; }
+.child-equip__item .tick-mark { background: rgba(255, 255, 255, 0.12); color: var(--brand-soft); }
+
+/* секция формы записи */
+.child-form__grid { display: grid; gap: 28px; align-items: start; }
+@media (min-width: 880px) { .child-form__grid { grid-template-columns: 1fr 1fr; gap: 48px; } }
+.child-form__points { margin-top: 24px; }
