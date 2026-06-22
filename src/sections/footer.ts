@@ -3,6 +3,16 @@ import { icon } from '../lib/icons';
 import { SITE } from '../lib/site';
 
 export function footer(): string {
+  // Блок поддержки ФСИ временно скрыт по запросу. Чтобы вернуть — заполнить
+  // fsiSupport разметкой из комментария ниже.
+  const fsiSupport = '';
+  /* Восстановить:
+  const fsiSupport = `
+      <div class="footer-support">
+        <img class="footer-support__logo" src="/images/logo-fsi.svg" width="120" height="60" loading="lazy" decoding="async" alt="Фонд содействия инновациям" />
+        <p class="footer-support__text">Проект создан при поддержке Федерального государственного бюджетного учреждения «Фонд содействия развитию малых форм предприятий в научно-технической сфере» в рамках программы «Студенческий стартап» федерального проекта «Платформа университетского технологического предпринимательства».</p>
+      </div>`;
+  */
   return `<footer class="site-footer">
     <div class="container">
       <div class="footer-grid">
@@ -32,10 +42,7 @@ export function footer(): string {
 
       </div>
 
-      <div class="footer-support">
-        <img class="footer-support__logo" src="/images/logo-fsi.svg" width="120" height="60" loading="lazy" decoding="async" alt="Фонд содействия инновациям" />
-        <p class="footer-support__text">Проект создан при поддержке Федерального государственного бюджетного учреждения «Фонд содействия развитию малых форм предприятий в научно-технической сфере» в рамках программы «Студенческий стартап» федерального проекта «Платформа университетского технологического предпринимательства».</p>
-      </div>
+      ${fsiSupport}
 
       <div class="footer-bottom">
         <img class="footer-itpark" src="/images/logo-itpark.svg" width="90" height="50" loading="lazy" decoding="async" alt="IT-парк" />
