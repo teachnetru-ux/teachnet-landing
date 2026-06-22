@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { basename } from 'node:path';
 import { renderPage } from './src/page';
 import { renderLegalPage } from './src/legal';
+import { renderChildPage } from './src/child';
 
 // Контент страницы собирается из секций (чистые функции) и встраивается в index.html
 // на этапе сборки/дев-сервера — статичный HTML, без рантайм-инъекции (важно для SEO и LCP,
@@ -64,10 +65,16 @@ export default defineConfig({
       transformIndexHtml: {
         order: 'pre',
         handler(html, ctx) {
-          // имя страницы по её html-файлу: index | privacy | personal-data-consent | cookie-policy
+          // имя страницы по её html-файлу: index | child | privacy | personal-data-consent | cookie-policy
           const slug = basename(ctx.path).replace(/\.html$/, '');
-          const legal = slug !== 'index' ? renderLegalPage(slug) : '';
-          const body = legal || renderPage();
+          let body: string;
+          if (slug === 'child') {
+            body = renderChildPage();
+          } else if (slug !== 'index') {
+            body = renderLegalPage(slug) || renderPage();
+          } else {
+            body = renderPage();
+          }
           return resolvePhotos(html.replace('<!--app-->', body));
         },
       },
@@ -79,6 +86,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: pageInput('index'),
+        child: pageInput('child'),
         privacy: pageInput('privacy'),
         'personal-data-consent': pageInput('personal-data-consent'),
         'cookie-policy': pageInput('cookie-policy'),

@@ -126,8 +126,10 @@ if (rate_limited(client_ip())) {
 // ── Сбор и санитизация ───────────────────────────────────────────────────────
 $name    = clean(post('name'), 100);
 $digits  = preg_replace('/\D/', '', post('phone'));
-$ageInt  = (int) post('age');
+$age     = clean(post('age'), 16);
 $consent = trim(post('consent'));
+// источник заявки: только из белого списка, иначе — обычная заявка с сайта
+$source  = in_array(post('source'), ['child-masterclass'], true) ? 'child-masterclass' : 'website';
 
 $utm_source   = clean(post('utm_source'), 255);
 $utm_medium   = clean(post('utm_medium'), 255);
@@ -138,17 +140,25 @@ $yclid        = clean(post('yclid'), 255);
 $ym_client_id = clean(post('ym_client_id'), 255);
 $referrer     = clean(post('referrer'), 512);
 
+// возраст: число 3–18 ИЛИ диапазон вида «6–8» / «9-12» (форма мастер-класса)
+$ageValid = false;
+if (preg_match('/^\d{1,2}$/', $age)) {
+    $n = (int) $age;
+    $ageValid = ($n >= 3 && $n <= 18);
+} elseif (preg_match('/^\d{1,2}\s*[–—-]\s*\d{1,2}$/u', $age)) {
+    $ageValid = true;
+}
+
 // ── Валидация ────────────────────────────────────────────────────────────────
-if (mb_strlen($name) < 2 || strlen($digits) !== 11 || $ageInt < 3 || $ageInt > 18 || $consent === '') {
+if (mb_strlen($name) < 2 || strlen($digits) !== 11 || !$ageValid || $consent === '') {
     http_response_code(422);
     echo json_encode(['ok' => false, 'error' => 'validation']);
     exit;
 }
 
-// каноничные (заведомо чистые) значения для хранения/отправки
+// каноничный (заведомо чистый) телефон; возраст уже очищен через clean()
 $sub   = substr($digits, -10);
 $phone = '+7 (' . substr($sub, 0, 3) . ') ' . substr($sub, 3, 3) . '-' . substr($sub, 6, 2) . '-' . substr($sub, 8, 2);
-$age   = (string) $ageInt;
 
 if ($BOT_TOKEN === '' || $CHAT_ID === '') {
     http_response_code(500);
@@ -196,7 +206,7 @@ if ($DB_NAME !== '' && $DB_USER !== '') {
             ':name'         => $name,
             ':phone'        => $phone,
             ':child_age'    => $age,
-            ':source'       => 'website',
+            ':source'       => $source,
             ':utm_source'   => $utm_source,
             ':utm_medium'   => $utm_medium,
             ':utm_campaign' => $utm_campaign,
@@ -215,8 +225,12 @@ if ($DB_NAME !== '' && $DB_USER !== '') {
 // ── Сообщение (источник + время + номер заявки внизу) ────────────────────────
 // parse_mode не используется → Telegram трактует текст как plain (разметку не
 // инжектнуть). Поля уже очищены от управляющих символов и переводов строк.
+// Заголовок зависит от источника — чтобы заявки с мастер-класса было видно отдельно.
+$heading = $source === 'child-masterclass'
+    ? 'Новая заявка — бесплатный мастер-класс (Твой Ход)'
+    : 'Новая заявка с лендинга TEACHNET';
 $text =
-    "Новая заявка с лендинга TEACHNET\n\n" .
+    $heading . "\n\n" .
     "Имя: " . $name . "\n" .
     "Телефон: " . $phone . "\n" .
     "Возраст ребёнка: " . $age .
@@ -258,7 +272,7 @@ if ($EMAIL_TO !== '') {
         if ($host === '') {
             $host = 'localhost';
         }
-        $subject = '=?UTF-8?B?' . base64_encode('Новая заявка с лендинга TEACHNET') . '?=';
+        $subject = '=?UTF-8?B?' . base64_encode($heading) . '?=';
         $body    =
             "Имя: " . $name . "\n" .
             "Телефон: " . $phone . "\n" .
