@@ -11,10 +11,22 @@
  *   ];
  */
 
-// ── Конфиг (выше веб-корня; путь '/../../' при необходимости подгоняется) ──
-$cfg = @include __DIR__ . '/../../send_config.php';
-if (!is_array($cfg)) {
-    $cfg = [];
+// ── Конфиг (выше веб-корня, вне зоны деплоя) ──
+// Глубина веб-корня на хостинге заранее неизвестна, поэтому ищем send_config.php
+// на нескольких уровнях выше send.php и берём первый файл, вернувший массив.
+$cfg = [];
+foreach (
+    [
+        __DIR__ . '/../send_config.php',
+        __DIR__ . '/../../send_config.php',
+        __DIR__ . '/../../../send_config.php',
+    ] as $cfgPath
+) {
+    $loaded = @include $cfgPath;
+    if (is_array($loaded)) {
+        $cfg = $loaded;
+        break;
+    }
 }
 $BOT_TOKEN = $cfg['bot_token'] ?? '';
 $CHAT_ID   = $cfg['chat_id']   ?? '';
