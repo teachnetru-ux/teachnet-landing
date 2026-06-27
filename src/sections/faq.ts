@@ -30,7 +30,7 @@ const ITEMS: AccItem[] = [
 ];
 
 export function faq(): string {
-  return `<section class="section" id="faq" aria-labelledby="faq-h">
+  return `<section class="section" id="faq" aria-labelledby="faq-h" data-scroll-goal="scroll_faq">
     <div class="blobs"></div>
     <div class="container layer" style="max-width:880px">
       <div class="section-head" data-reveal>

@@ -29,7 +29,7 @@ export function translator(): string {
     </article>`,
   ).join('');
 
-  return `<section class="section" aria-labelledby="tr-h">
+  return `<section class="section" aria-labelledby="tr-h" data-scroll-goal="scroll_translator">
     <div class="container">
       <div class="section-head" data-reveal>
         <h2 class="h2" id="tr-h">Инженерия — проще, чем звучит</h2>

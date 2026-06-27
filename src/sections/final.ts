@@ -10,14 +10,14 @@ export function final(): string {
     )
     .join('');
 
-  return `<section class="section final" id="final" aria-labelledby="fin-h">
+  return `<section class="section final" id="final" aria-labelledby="fin-h" data-scroll-goal="scroll_final">
     <div class="blueprint"></div>
     <div class="container layer">
       <div class="section-head section-head--center" data-reveal>
         <h2 class="h2" id="fin-h">Один бесплатный урок — и всё станет понятно</h2>
         <p class="lead">Ребёнок соберёт робота. Вы получите ответы.</p>
       </div>
-      <div style="text-align:center" data-reveal>${cta({ label: 'Бесплатный пробный урок' })}</div>
+      <div style="text-align:center" data-reveal>${cta({ label: 'Бесплатный пробный урок', goal: 'block12_cta' })}</div>
       <div class="final__contacts" data-reveal>
         <a href="${SITE.phoneHref}">${SITE.phoneDisplay}</a>
         <a href="${SITE.social.vk}" target="_blank" rel="noopener">ВКонтакте</a>

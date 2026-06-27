@@ -40,7 +40,7 @@ export function renderPage(): string {
     faq(),
     final(),
     '</main>',
-    footer(),
+    footer(true),
     stickyBar(),
     cookieBanner(),
   ].join('\n');

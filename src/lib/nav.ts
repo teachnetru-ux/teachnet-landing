@@ -1,6 +1,8 @@
 /**
- * Плавный скролл по якорям с учётом высоты фиксированной шапки + трекинг CTA
- * (цель Яндекс.Метрики cta_click). Уважает prefers-reduced-motion.
+ * Плавный скролл по якорям с учётом высоты фиксированной шапки + клик-цели
+ * Яндекс.Метрики: на элементе с data-goal по клику шлём именно его идентификатор
+ * через reachGoal() (каждая кнопка/ссылка — отдельная цель). Уважает
+ * prefers-reduced-motion.
  */
 import { reachGoal } from './metrika';
 
@@ -32,8 +34,10 @@ export function initNav(): void {
     history.pushState(null, '', href);
   });
 
-  // цель cta_click — на любой элемент с data-cta
+  // клик-цели: на элементе с data-goal шлём именно его идентификатор (отдельная цель)
   document.addEventListener('click', (e) => {
-    if ((e.target as HTMLElement).closest('[data-cta]')) reachGoal('cta_click');
+    const el = (e.target as HTMLElement).closest<HTMLElement>('[data-goal]');
+    const goal = el?.getAttribute('data-goal');
+    if (goal) reachGoal(goal);
   });
 }

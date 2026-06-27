@@ -17,7 +17,7 @@ export function trust(): string {
         <figcaption class="trust-cap">${p.name}</figcaption>
       </figure>`,
   ).join('');
-  return `<section class="section trust" aria-labelledby="trust-h" style="padding-block:48px">
+  return `<section class="section trust" aria-labelledby="trust-h" style="padding-block:48px" data-scroll-goal="scroll_trust">
     <div class="container">
       <h2 class="h3 section-head section-head--center muted" id="trust-h" style="margin-bottom:28px;font-weight:600">Нас поддерживают</h2>
       <div class="trust-grid" data-reveal>${logos}</div>

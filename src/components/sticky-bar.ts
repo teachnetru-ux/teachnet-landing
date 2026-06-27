@@ -10,7 +10,7 @@ import { cta } from './button';
 export function stickyBar(): string {
   return `<div class="sticky-cta" id="sticky-cta" aria-hidden="true">
     <span class="sticky-cta__text">Первый урок — бесплатный</span>
-    ${cta({ label: 'Записаться', compact: true })}
+    ${cta({ label: 'Записаться', compact: true, goal: 'sticky_cta' })}
   </div>`;
 }
 

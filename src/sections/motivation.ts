@@ -2,7 +2,7 @@
 import { icon } from '../lib/icons';
 
 export function motivation(): string {
-  return `<section class="section motivation" aria-labelledby="mot-h">
+  return `<section class="section motivation" aria-labelledby="mot-h" data-scroll-goal="scroll_motivation">
     <div class="blobs blobs--center blobs--strong"></div>
     <div class="container layer">
       <div class="section-head" data-reveal>

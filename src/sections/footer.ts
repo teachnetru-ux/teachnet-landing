@@ -2,7 +2,10 @@
 import { icon } from '../lib/icons';
 import { SITE } from '../lib/site';
 
-export function footer(): string {
+export function footer(withScrollGoal = false): string {
+  // скролл-цель подвала вешаем только на главной (передаётся из page.ts),
+  // чтобы scroll_footer не срабатывал на дочерних/юридических страницах
+  const scrollAttr = withScrollGoal ? ' data-scroll-goal="scroll_footer"' : '';
   // Блок поддержки ФСИ временно скрыт по запросу. Чтобы вернуть — заполнить
   // fsiSupport разметкой из комментария ниже.
   const fsiSupport = '';
@@ -13,7 +16,7 @@ export function footer(): string {
         <p class="footer-support__text">Проект создан при поддержке Федерального государственного бюджетного учреждения «Фонд содействия развитию малых форм предприятий в научно-технической сфере» в рамках программы «Студенческий стартап» федерального проекта «Платформа университетского технологического предпринимательства».</p>
       </div>`;
   */
-  return `<footer class="site-footer">
+  return `<footer class="site-footer"${scrollAttr}>
     <div class="container">
       <div class="footer-grid">
 
