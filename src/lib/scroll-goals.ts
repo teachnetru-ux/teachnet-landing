@@ -1,35 +1,66 @@
 /**
- * Скролл-цели Яндекс.Метрики. На секциях с атрибутом data-scroll-goal="scroll_…"
- * через IntersectionObserver один раз за визит шлём цель, когда секция достигнута:
- * видно ≥50% её площади, либо (для секций выше экрана) её середина прошла центр окна.
- * Цели уходят только через обёртку reachGoal() (счётчик 96429194).
+ * Скролл-цели Яндекс.Метрики (через обёртку reachGoal(), счётчик 96429194).
+ * Цель по секции с data-scroll-goal="scroll_…" отправляется ОДИН раз за визит и
+ * только если секция провисела видимой непрерывно ~600 мс. Выдержка по времени
+ * убирает ложные срабатывания при клике по якорям в навигации, когда страница
+ * быстро пролистывается через промежуточные секции.
+ *
+ * Видимой считается секция, у которой в окне ≥50% площади, либо (для секций выше
+ * экрана) её середина прошла центр окна.
  */
 import { reachGoal } from './metrika';
+
+const DWELL_MS = 600; // сколько мс секция должна быть видимой непрерывно
+const VISIBLE_RATIO = 0.5;
 
 export function initScrollGoals(): void {
   const els = document.querySelectorAll<HTMLElement>('[data-scroll-goal]');
   if (!els.length || !('IntersectionObserver' in window)) return;
 
-  const fired: Record<string, boolean> = {};
+  const fired = new Set<string>();
+  const timers = new Map<Element, number>();
+
+  const isVisible = (entry: IntersectionObserverEntry): boolean => {
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+    const r = entry.boundingClientRect;
+    const ratioOk = entry.intersectionRatio >= VISIBLE_RATIO;
+    const midReached = r.height > vh && r.top <= vh / 2 && r.bottom >= vh / 2; // высокие секции
+    return entry.isIntersecting && (ratioOk || midReached);
+  };
+
   const observer = new IntersectionObserver(
     (entries) => {
-      entries.forEach((entry) => {
+      for (const entry of entries) {
         const el = entry.target as HTMLElement;
-        const vh = window.innerHeight || document.documentElement.clientHeight;
-        const rect = entry.boundingClientRect;
-        const ratioOk = entry.intersectionRatio >= 0.5;
-        const midReached = rect.height > vh && rect.top <= vh / 2 && rect.bottom >= vh / 2;
-        if (entry.isIntersecting && (ratioOk || midReached)) {
-          const goal = el.getAttribute('data-scroll-goal');
-          if (goal && !fired[goal]) {
-            fired[goal] = true;
-            reachGoal(goal);
-            observer.unobserve(el);
+        const goal = el.getAttribute('data-scroll-goal') || '';
+        if (!goal || fired.has(goal)) {
+          observer.unobserve(el);
+          continue;
+        }
+
+        if (isVisible(entry)) {
+          if (!timers.has(el)) {
+            const id = window.setTimeout(() => {
+              timers.delete(el);
+              if (!fired.has(goal)) {
+                fired.add(goal);
+                reachGoal(goal); // шлём цель только после выдержки
+                observer.unobserve(el);
+              }
+            }, DWELL_MS);
+            timers.set(el, id);
+          }
+        } else {
+          const id = timers.get(el); // ушла из кадра раньше — отменяем
+          if (id) {
+            clearTimeout(id);
+            timers.delete(el);
           }
         }
-      });
+      }
     },
     { threshold: [0, 0.25, 0.5, 0.75, 1] },
   );
+
   els.forEach((el) => observer.observe(el));
 }
