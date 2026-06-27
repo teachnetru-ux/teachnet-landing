@@ -12,7 +12,7 @@ export function price(): string {
     .map((t) => `<li><span class="tick-mark">${icon('check')}</span><span>${t}</span></li>`)
     .join('');
 
-  return `<section class="section" id="price" aria-labelledby="price-h">
+  return `<section class="section" id="price" aria-labelledby="price-h" data-scroll-goal="scroll_price">
     <div class="blobs blobs--center"></div>
     <div class="container layer">
       <article class="card-glass price-card" data-reveal>

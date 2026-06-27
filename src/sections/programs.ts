@@ -38,7 +38,7 @@ export function programs(): string {
     </li>`,
   ).join('');
 
-  return `<section class="section" id="programs" aria-labelledby="pr-h">
+  return `<section class="section" id="programs" aria-labelledby="pr-h" data-scroll-goal="scroll_programs">
     <div class="container">
       <div class="section-head" data-reveal>
         <h2 class="h2" id="pr-h">Путь, который пройдёт ваш ребёнок</h2>
@@ -46,7 +46,7 @@ export function programs(): string {
       </div>
       <ol class="route">${steps}</ol>
       <p class="muted" style="text-align:center;margin-top:36px" data-reveal>С какой ступени начать — определим на пробном уроке.</p>
-      <div style="text-align:center;margin-top:20px" data-reveal>${cta({ label: 'Записаться' })}</div>
+      <div style="text-align:center;margin-top:20px" data-reveal>${cta({ label: 'Записаться', goal: 'block4_signup' })}</div>
     </div>
   </section>`;
 }

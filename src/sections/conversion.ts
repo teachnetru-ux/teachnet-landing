@@ -13,7 +13,7 @@ export function conversion(): string {
     (p) => `<li><span class="tick-mark">${icon('check')}</span><span>${p}</span></li>`,
   ).join('');
 
-  return `<section class="section conversion" id="conversion" aria-labelledby="cv-h">
+  return `<section class="section conversion" id="conversion" aria-labelledby="cv-h" data-scroll-goal="scroll_conversion">
     <div class="blobs"></div>
     <div class="container layer">
       <div class="section-head section-head--center" id="lead" data-reveal>

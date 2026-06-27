@@ -27,7 +27,7 @@ export function mobileMenu(): string {
       <nav class="mobile-nav__links" aria-label="Разделы сайта">${links}</nav>
       <div class="mobile-nav__foot">
         <a class="mobile-nav__phone" href="${SITE.phoneHref}">${SITE.phoneDisplay}</a>
-        ${cta({ label: 'Бесплатный пробный урок', block: true })}
+        ${cta({ label: 'Бесплатный пробный урок', block: true, goal: 'burger_cta' })}
       </div>
     </aside>
   </div>`;

@@ -29,7 +29,7 @@ export function parents(): string {
     </article>`,
   ).join('');
 
-  return `<section class="section" aria-labelledby="par-h">
+  return `<section class="section" aria-labelledby="par-h" data-scroll-goal="scroll_parents">
     <div class="blobs"></div>
     <div class="container layer">
       <div class="section-head" data-reveal>
